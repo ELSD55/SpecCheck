@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpecCheck — Can My PC Run It?</title>
+    <meta name="description" content="Check if your PC can run any game. Get instant FPS estimates, hardware ratings, and bottleneck analysis for 85+ games.">
+    <meta name="keywords" content="FPS calculator, PC specs checker, GPU benchmark, CPU benchmark, can my PC run it, gaming PC test">
+    <meta property="og:title" content="SpecCheck — Can My PC Run It?">
+    <meta property="og:description" content="Enter your specs and get instant FPS estimates for 85+ games, performance ratings, and hardware analysis.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23080a0f'/><rect width='100' height='100' rx='18' fill='%23080a0f' stroke='%2300d4ff' stroke-width='4'/><text x='50' y='56' font-family='Arial Black,sans-serif' font-size='38' font-weight='900' fill='%2300d4ff' text-anchor='middle' dominant-baseline='middle' letter-spacing='-2'>SC</text><circle cx='72' cy='28' r='7' fill='%2300d4ff' opacity='0.9'/></svg>">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="page-loader">
+    <div class="loader-logo">SPEC<span>CHECK</span></div>
+    <div class="loader-spinner"></div>
+</div>
+
+<header class="site-header">
+    <div class="site-logo">
+        <div class="logo-dot"></div>
+        SPEC<span>CHECK</span>
+    </div>
+    <button id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+</header>
+
+<div class="main-wrapper">
+
+    <div class="hero">
+        <h1>Can My PC <span class="highlight">Run It?</span></h1>
+        <p>Enter your specs — get instant FPS estimates, ratings &amp; hardware analysis</p>
+    </div>
+
+    <div id="main-tabs">
+        <button id="gaming-tab" onclick="switchMain('gaming')" class="active">🎮 Gaming</button>
+        <button id="productivity-tab" onclick="switchMain('productivity')">💻 Productivity</button>
+        <button id="phone-tab" onclick="switchMain('phone')">📱 Phone</button>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         GAMING SECTION
+    ══════════════════════════════════════ -->
+    <div id="gaming-section">
+
+        <div class="section-header">
+            <h2>Your Specs</h2>
+            <p>Select your hardware below — FPS is calculated instantly</p>
+        </div>
+
+        <div class="specs-card">
+            <form>
+                <div class="form-group">
+                    <label>CPU</label>
+                    <input type="text" id="cpu" placeholder="e.g Intel Core i9-13900K" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>GPU</label>
+                    <input type="text" id="gpu" placeholder="e.g NVIDIA RTX 4090" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>RAM (GB)</label>
+                    <input type="number" id="ram" placeholder="e.g 16" min="1" max="256">
+                </div>
+                <div class="form-group">
+                    <label>Resolution</label>
+                    <select id="resolution">
+                        <option value="1080p">1080p — Full HD</option>
+                        <option value="1440p">1440p — 2K</option>
+                        <option value="4K">4K — Ultra HD</option>
+                        <option value="720p">720p — HD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Power Supply (Watts)</label>
+                    <input type="number" id="psu" placeholder="e.g 750" min="300" max="2000" onchange="updatePower()">
+                </div>
+                <button type="button" id="check-fps-btn" class="btn-primary">⚡ CHECK FPS</button>
+                <!-- NEW SHARE BUTTON ADDED HERE -->
+                <button type="button" class="btn-secondary" style="margin-top:10px" onclick="shareMyPC()">🔗 Share My Build</button>
+            </form>
+            
+            <!-- NEW POWER CALCULATOR WIDGET (Hidden by default) -->
+            <div id="power-widget" style="display:none; margin-top:20px; padding:15px; background:var(--bg3); border-radius:8px;">
+                <div style="font-size:14px; color:var(--text); margin-bottom:8px;">💡 Power Usage Estimate</div>
+                <div style="font-size:13px; color:var(--text2);" id="power-usage">Select components...</div>
+            </div>
+        </div>
+
+        <div id="ai-status" style="display:none" class="ai-status-bar">
+            <div class="ai-spinner"></div>
+            <span>Calculating your FPS...</span>
+        </div>
+
+        <div class="section-header">
+            <h2>FPS Estimates</h2>
+            <p>85+ popular games across all genres</p>
+        </div>
+
+        <div id="search-section">
+            <input type="text" id="game-search" placeholder="Search games...">
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Game</th>
+                        <th>Low</th>
+                        <th>Medium</th>
+                        <th>High</th>
+                    </tr>
+                </thead>
+                <tbody id="games-tbody"></tbody>
+            </table>
+        </div>
+
+        <button id="show-all-btn" onclick="toggleAllGames()" class="btn-secondary">
+            Show All Games
+        </button>
+
+        <div id="fps-counter" style="display:none"></div>
+
+        <p id="disclaimer">
+            ℹ️ FPS values are calculated estimates based on real benchmark data and may vary with drivers, background apps, and system config.
+        </p>
+
+        <hr class="section-divider">
+
+        <!-- ── BUILD OPTIMIZER (NEW FEATURE) ── -->
+        <div id="optimizer-section">
+            <div class="section-header">
+                <h2>🎯 Build Optimizer</h2>
+                <p>Find the best balanced CPU+GPU combo for your budget</p>
+            </div>
+            <div class="specs-card">
+                <form id="optimizer-form" style="grid-template-columns: 1fr 1fr auto; gap:10px; align-items:end;">
+                    <div class="form-group">
+                        <label>Budget (USD)</label>
+                        <input type="number" id="opt-budget" placeholder="e.g 1500" min="300" max="10000" step="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Primary Use</label>
+                        <select id="opt-usecase">
+                            <option value="balanced">Balanced</option>
+                            <option value="gaming">Gaming</option>
+                            <option value="productivity">Content Creation</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-primary" style="width:auto; grid-column:span 2;" onclick="optimizeBuild()">
+                        Find Best Build
+                    </button>
+                </form>
+            </div>
+            <div id="optimizer-result" style="display:none; margin-top:20px;"></div>
+        </div>
+        <hr class="section-divider">
+
+        <!-- ── COMPARE ── -->
+        <div id="compare-section">
+            <div class="section-header">
+                <h2>Hardware Showdown</h2>
+                <p>Visual head-to-head performance battle</p>
+            </div>
+
+            <div id="compare-tabs">
+                <button id="cpu-tab" onclick="showTab('cpu')" class="active">CPU</button>
+                <button id="gpu-tab" onclick="showTab('gpu')">GPU</button>
+            </div>
+
+            <div id="compare-inputs">
+                <div class="form-group">
+                    <label>First Contender</label>
+                    <input type="text" id="compare1" placeholder="e.g Intel Core i7-12700K" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Second Contender</label>
+                    <input type="text" id="compare2" placeholder="e.g AMD Ryzen 7 5800X" autocomplete="off">
+                </div>
+            </div>
+
+            <button type="button" id="compare-btn" class="btn-secondary" onclick="compareHardware()">⚔️ Battle!</button>
+
+            <div id="compare-result" style="display:none">
+                <div class="battle-arena">
+                    <div class="fighter fighter-left" id="fighter-left">
+                        <div class="fighter-name">—</div>
+                        <div class="radial-chart">
+                            <svg viewBox="0 0 200 200">
+                                <circle class="bg-circle" cx="100" cy="100" r="80" />
+                                <circle class="progress-circle left-progress" cx="100" cy="100" r="80" />
+                                <text class="score-text" x="100" y="110">0</text>
+                            </svg>
+                        </div>
+                        <div class="fighter-stats">
+                            <div class="stat-row">
+                                <span class="stat-icon">⚡</span>
+                                <span class="stat-label">Performance</span>
+                                <span class="stat-value" id="left-perf">—</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-icon">💰</span>
+                                <span class="stat-label">Value</span>
+                                <span class="stat-value" id="left-value">—</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-icon">🔥</span>
+                                <span class="stat-label">Power</span>
+                                <span class="stat-value" id="left-power">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vs-divider">
+                        <div class="vs-badge">VS</div>
+                        <div class="winner-crown" id="winner-crown" style="display:none">👑</div>
+                    </div>
+
+                    <div class="fighter fighter-right" id="fighter-right">
+                        <div class="fighter-name">—</div>
+                        <div class="radial-chart">
+                            <svg viewBox="0 0 200 200">
+                                <circle class="bg-circle" cx="100" cy="100" r="80" />
+                                <circle class="progress-circle right-progress" cx="100" cy="100" r="80" />
+                                <text class="score-text" x="100" y="110">0</text>
+                            </svg>
+                        </div>
+                        <div class="fighter-stats">
+                            <div class="stat-row">
+                                <span class="stat-icon">⚡</span>
+                                <span class="stat-label">Performance</span>
+                                <span class="stat-value" id="right-perf">—</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-icon">💰</span>
+                                <span class="stat-label">Value</span>
+                                <span class="stat-value" id="right-value">—</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-icon">🔥</span>
+                                <span class="stat-label">Power</span>
+                                <span class="stat-value" id="right-power">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="compare-breakdown">
+                    <h3>Performance Breakdown</h3>
+                    <div class="breakdown-category">
+                        <div class="cat-label">
+                            <span>🎮 Gaming</span>
+                            <span class="cat-diff" id="gaming-diff">—</span>
+                        </div>
+                        <div class="dual-bar">
+                            <div class="bar-left" id="gaming-left" style="width:0%"></div>
+                            <div class="bar-right" id="gaming-right" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-category">
+                        <div class="cat-label">
+                            <span>💻 Productivity</span>
+                            <span class="cat-diff" id="prod-diff">—</span>
+                        </div>
+                        <div class="dual-bar">
+                            <div class="bar-left" id="prod-left" style="width:0%"></div>
+                            <div class="bar-right" id="prod-right" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-category">
+                        <div class="cat-label">
+                            <span>🚀 Multi-Core</span>
+                            <span class="cat-diff" id="multi-diff">—</span>
+                        </div>
+                        <div class="dual-bar">
+                            <div class="bar-left" id="multi-left" style="width:0%"></div>
+                            <div class="bar-right" id="multi-right" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="verdict-panel" id="verdict-panel"></div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- ── RATE MY PC ── -->
+        <div id="rating-section">
+            <div class="section-header">
+                <h2>Rate My PC</h2>
+                <p>Overall score and tier based on your build</p>
+            </div>
+            <button type="button" id="rate-btn" class="btn-secondary" onclick="ratePC()">Rate My PC</button>
+            <div id="rating-result" style="display:none"></div>
+        </div>
+
+        <hr class="section-divider">
+                <hr class="section-divider">
+
+        <!-- ── BUILD OPTIMIZER ── -->
+        <div id="optimizer-section">
+            <div class="section-header">
+                <h2>Build Optimizer</h2>
+                <p>Get the best balanced CPU+GPU combo for your budget</p>
+            </div>
+
+            <div class="specs-card">
+                <form>
+                    <div class="form-group">
+                        <label>Budget (USD)</label>
+                        <input type="number" id="opt-budget" placeholder="e.g 1500" min="300" max="10000" step="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Primary Use</label>
+                        <select id="opt-usecase">
+                            <option value="gaming">Gaming</option>
+                            <option value="productivity">Content Creation</option>
+                            <option value="balanced">Balanced (Gaming + Work)</option>
+                            <option value="budget">Ultra Budget</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Resolution Target</label>
+                        <select id="opt-resolution">
+                            <option value="1080p">1080p High (144 FPS)</option>
+                            <option value="1440p">1440p High (60 FPS)</option>
+                            <option value="4k">4K Medium (60 FPS)</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="optimizeBuild()">
+                        🎯 Find Best Build
+                    </button>
+                </form>
+            </div>
+
+            <div id="optimizer-results" style="display:none">
+                <div class="optimizer-grid">
+                    <div class="optimizer-card" id="opt-card-1">
+                        <div class="opt-badge">Best Value</div>
+                        <div class="opt-name">—</div>
+                        <div class="opt-specs">—</div>
+                        <div class="opt-price">—</div>
+                        <div class="opt-performance">—</div>
+                        <button class="btn-secondary" onclick="useOptimizedBuild(1)">Use This Build</button>
+                    </div>
+                    <div class="optimizer-card" id="opt-card-2">
+                        <div class="opt-badge">Recommended</div>
+                        <div class="opt-name">—</div>
+                        <div class="opt-specs">—</div>
+                        <div class="opt-price">—</div>
+                        <div class="opt-performance">—</div>
+                        <button class="btn-secondary" onclick="useOptimizedBuild(2)">Use This Build</button>
+                    </div>
+                    <div class="optimizer-card" id="opt-card-3">
+                        <div class="opt-badge">High Performance</div>
+                        <div class="opt-name">—</div>
+                        <div class="opt-specs">—</div>
+                        <div class="opt-price">—</div>
+                        <div class="opt-performance">—</div>
+                        <button class="btn-secondary" onclick="useOptimizedBuild(3)">Use This Build</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- ── SAVE & SHARE BUILD ── -->
+        <div id="save-share-section">
+            <div class="section-header">
+                <h2>Save & Share</h2>
+                <p>Save your build or share it with friends</p>
+            </div>
+
+            <div class="save-share-actions">
+                <button class="btn-secondary" onclick="saveBuild()">
+                    💾 Save Current Build
+                </button>
+                <button class="btn-secondary" onclick="shareMyPC()">
+                    🔗 Copy Share Link
+                </button>
+                <button class="btn-secondary" onclick="showSavedBuilds()">
+                    📂 View Saved Builds
+                </button>
+            </div>
+
+            <div id="saved-builds-modal" style="display:none" class="modal-overlay" onclick="closeSavedBuilds()">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>💾 Saved Builds</h3>
+                        <button onclick="closeSavedBuilds()" class="close-btn">✕</button>
+                    </div>
+                    <div id="saved-builds-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- ── BUILD HISTORY ── -->
+        <div id="history-section">
+            <div class="section-header">
+                <h2>Build History</h2>
+                <p>Track FPS improvements across different builds</p>
+            </div>
+
+            <div id="history-chart" style="display:none">
+                <canvas id="fps-history-canvas" width="600" height="300"></canvas>
+            </div>
+
+            <div id="history-table" style="display:none">
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>CPU</th>
+                                <th>GPU</th>
+                                <th>Avg FPS</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button class="btn-secondary" onclick="clearHistory()" style="margin-top:16px">
+                🗑️ Clear History
+            </button>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- ── PRICE TRENDS ── -->
+        <div id="price-section">
+            <div class="section-header">
+                <h2>Price Trends</h2>
+                <p>Check current market prices for your components</p>
+            </div>
+
+            <div class="price-cards">
+                <div class="price-card">
+                    <div class="price-label">Current CPU</div>
+                    <div class="price-name" id="cpu-price-name">—</div>
+                    <div class="price-value" id="cpu-price">—</div>
+                    <div class="price-trend" id="cpu-trend">—</div>
+                    <a href="#" id="cpu-buy-link" target="_blank" class="buy-link" style="display:none">
+                        🛒 View on Amazon
+                    </a>
+                </div>
+                <div class="price-card">
+                    <div class="price-label">Current GPU</div>
+                    <div class="price-name" id="gpu-price-name">—</div>
+                    <div class="price-value" id="gpu-price">—</div>
+                    <div class="price-trend" id="gpu-trend">—</div>
+                    <a href="#" id="gpu-buy-link" target="_blank" class="buy-link" style="display:none">
+                        🛒 View on Amazon
+                    </a>
+                </div>
+            </div>
+
+            <p style="font-size:11px; color:var(--text3); margin-top:12px;">
+                💡 Prices are estimates and may vary by retailer and region
+            </p>
+        </div>
+
+        <!-- ── BOTTLENECK ── -->
+        <div id="bottleneck-section">
+            <div class="section-header">
+                <h2>Bottleneck Checker</h2>
+                <p>Find out if your CPU or GPU is holding your build back</p>
+            </div>
+            <button type="button" id="bottleneck-btn" class="btn-secondary" onclick="checkBottleneck()">Check Bottleneck</button>
+            <div id="bottleneck-result" style="display:none"></div>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PRODUCTIVITY SECTION
+    ══════════════════════════════════════ -->
+    <div id="productivity-section" style="display:none">
+
+        <div class="section-header">
+            <h2>Your Specs</h2>
+            <p>Enter your hardware to see how creative apps perform</p>
+        </div>
+
+        <div class="specs-card">
+            <form id="productivity-form">
+                <div class="form-group">
+                    <label>CPU</label>
+                    <input type="text" id="prod-cpu" placeholder="e.g Intel Core i7-13700K" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>GPU</label>
+                    <input type="text" id="prod-gpu" placeholder="e.g NVIDIA RTX 3060" autocomplete="off">
+                </div>
+                <div class="form-group" style="grid-column: span 2">
+                    <label>RAM (GB)</label>
+                    <input type="number" id="prod-ram" placeholder="e.g 16" min="1" max="256" style="max-width:200px">
+                </div>
+                <button type="button" class="btn-primary" onclick="checkProductivity()">⚡ CHECK PERFORMANCE</button>
+            </form>
+        </div>
+
+        <div class="section-header">
+            <h2>App Performance</h2>
+            <p>35+ creative and professional applications</p>
+        </div>
+
+        <div class="category-filter">
+            <button class="category-btn active" data-category="all" onclick="filterCategory('all')">All</button>
+            <button class="category-btn" data-category="Video" onclick="filterCategory('Video')">Video</button>
+            <button class="category-btn" data-category="Photo" onclick="filterCategory('Photo')">Photo</button>
+            <button class="category-btn" data-category="3D" onclick="filterCategory('3D')">3D</button>
+            <button class="category-btn" data-category="CAD" onclick="filterCategory('CAD')">CAD</button>
+            <button class="category-btn" data-category="GameDev" onclick="filterCategory('GameDev')">Game Dev</button>
+            <button class="category-btn" data-category="Dev" onclick="filterCategory('Dev')">Dev</button>
+            <button class="category-btn" data-category="Design" onclick="filterCategory('Design')">Design</button>
+            <button class="category-btn" data-category="Streaming" onclick="filterCategory('Streaming')">Streaming</button>
+            <button class="category-btn" data-category="Audio" onclick="filterCategory('Audio')">Audio</button>
+        </div>
+
+        <div class="table-card">
+            <table id="productivity-table" style="display:none">
+                <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>Performance</th>
+                        <th>Verdict</th>
+                    </tr>
+                </thead>
+                <tbody id="productivity-results"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PHONE SECTION
+    ══════════════════════════════════════ -->
+    <div id="phone-section" style="display:none">
+
+        <div class="section-header">
+            <h2>Your Phone</h2>
+            <p>Enter your chipset and RAM for mobile game performance</p>
+        </div>
+
+        <div class="specs-card">
+            <form id="phone-form">
+                <div class="form-group">
+                    <label>Chipset</label>
+                    <input type="text" id="phone-chip" placeholder="e.g Snapdragon 8 Gen 2" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>RAM (GB)</label>
+                    <input type="number" id="phone-ram" placeholder="e.g 8" min="1" max="24">
+                </div>
+                <button type="button" id="check-phone-btn" class="btn-primary" onclick="checkPhone()">⚡ CHECK PERFORMANCE</button>
+            </form>
+        </div>
+
+        <div id="phone-ai-status" style="display:none" class="ai-status-bar">
+            <div class="ai-spinner"></div>
+            <span>Calculating mobile performance...</span>
+        </div>
+
+        <div class="section-header">
+            <h2>Mobile Game Performance</h2>
+            <p>20 popular mobile titles</p>
+        </div>
+
+        <div class="table-card">
+            <table id="phone-table" style="display:none">
+                <thead>
+                    <tr>
+                        <th>Game</th>
+                        <th>Max FPS</th>
+                        <th>Settings</th>
+                        <th>Verdict</th>
+                    </tr>
+                </thead>
+                <tbody id="phone-results"></tbody>
+            </table>
+        </div>
+
+        <div id="phone-tier-result" style="display:none" class="phone-tier-card"></div>
+
+    </div>
+
+</div>
+
+<footer class="site-footer">
+    <p>SpecCheck © 2026 — Hardware Performance Checker</p>
+    <p>Estimates are based on benchmark data and may vary by system configuration</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+    window.addEventListener("load", function() {
+        const loader = document.getElementById("page-loader");
+        loader.classList.add("loader-done");
+        setTimeout(() => loader.style.display = "none", 400);
+    });
+</script>
+</body>
+</html>

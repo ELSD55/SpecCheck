@@ -1,0 +1,3 @@
+SpecCheck is a web application that allows users to check whether their device can run specific games or productivity software. Users can input their laptop or mobile specifications, and the system compares them with the required specs to provide a simple compatibility result.
+
+The project is built using HTML, CSS, and JavaScript, focusing on user input handling, conditional logic, and a clean interface.
